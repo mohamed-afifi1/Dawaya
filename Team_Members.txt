@@ -1,0 +1,25 @@
+Team Number: 8
+
+Member 1 Name: Mohamed Ahmed Mohamed
+Member 1 ID: 20231134
+
+Member 2 Name: Mostafa Mahmoud Fathy
+Member 2 ID: 20231244
+
+Member 3 Name: Mohamed Atef Abd El-Kader
+Member 3 ID: 20231143
+
+Member 4 Name: Mostafa Ehab Mostafa
+Member 4 ID: 20231167
+
+Member 5 Name: Marwan Hussein Mohamed
+Member 5 ID: 20230382
+
+Member 6 Name: Mohamed Ayman Afifi
+Member 6 ID: 20230618
+
+Member 7 Name: Mahmoud Abd El-Aziz Mahmoud
+Member 7 ID: 20230603
+
+Member 8 Name: Mohamed Saad Taha
+Member 8 ID: 20231141
