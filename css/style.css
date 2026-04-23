@@ -57,8 +57,36 @@ body {
     align-items: center;
     gap: 12px;
     font-weight: 700;
-    font-size: 24px;
+    font-size: 20px;
     color: var(--primary-color);
+}
+.logo svg {
+    width: 32px;
+    height: 32px;
+}
+
+.logo svg g {
+    stroke: none;
+    stroke-width: 0;
+    stroke-dasharray: none;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
+    stroke-miterlimit: 10;
+    fill: none;
+    fill-rule: nonzero;
+    opacity: 1;
+}
+
+.logo svg path {
+    stroke: none;
+    stroke-width: 1;
+    stroke-dasharray: none;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
+    stroke-miterlimit: 10;
+    fill: currentColor;
+    fill-rule: nonzero;
+    opacity: 1;
 }
 
 .main-nav {
@@ -324,6 +352,34 @@ body {
 
 .inline-form input:focus {
     border-color: var(--primary-color);
+}
+
+.inline-form input[type="file"] {
+    height: auto;
+    width: auto;
+    padding: 10px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    background: var(--bg-main);
+}
+
+.inline-form input[type="file"]::file-selector-button {
+    border: none;
+    background: var(--border-color);
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.2s, color 0.2s;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.inline-form input[type="file"]::file-selector-button:hover {
+    background: var(--primary-color);
+    color: white;
 }
 
 .table-container {
@@ -680,4 +736,58 @@ body {
     .footer-container {
         padding: 0 16px;
     }
+}
+
+/* Edit Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: var(--radius-md);
+    width: 400px;
+    max-width: 90%;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.modal-input {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+}
+
+.modal-input:focus {
+    border-color: var(--primary-color);
+}
+
+.modal-label {
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.flex-1 {
+    flex: 1;
 }
