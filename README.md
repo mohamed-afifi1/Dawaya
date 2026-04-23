@@ -125,7 +125,14 @@ Dawaya/
 * ✅ Input validation (Client & Server)
 * ✅ File type & size validation
 * ✅ API keys hidden in backend
+* ✅ Session-based authentication (Customer / Pharmacy)
+* ✅ Role-based authorization (Pharmacy can modify inventory; Customer is read-only)
 * ✅ Error handling for API & DB operations
+
+### Demo Accounts
+
+* Customer: `customer` / `customer123`
+* Pharmacy: `pharmacy` / `pharmacy123`
 
 ---
 

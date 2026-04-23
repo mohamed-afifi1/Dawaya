@@ -5,6 +5,10 @@
 //  No API key required — openFDA is free and open
 // ============================================================
 
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
 define('OPENFDA_BASE', 'https://api.fda.gov/drug/label.json');
 define('OPENFDA_LIMIT', 5); // how many results to return
 
@@ -136,6 +140,11 @@ function smartSearch(string $query): void {
 // ============================================================
 if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     header('Content-Type: application/json');
+
+    if (empty($_SESSION['user'])) {
+        http_response_code(401);
+        respond('error', message: 'Authentication required.');
+    }
 
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
     $query  = trim($_GET['query']  ?? $_POST['query']  ?? '');

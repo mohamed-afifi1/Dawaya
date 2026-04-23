@@ -19,7 +19,8 @@
         </div>
         
         <nav class="main-nav">
-            <a href="#search" class="nav-link active" data-target="searchSection">Search</a>
+            <a href="#account" class="nav-link active" data-target="authSection">Account</a>
+            <a href="#search" class="nav-link" data-target="searchSection">Search</a>
             <a href="#inventory" class="nav-link" data-target="inventorySection">Inventory</a>
         </nav>
 
@@ -36,7 +37,8 @@
 
     <!-- Mobile Navigation Menu -->
     <nav class="mobile-nav" id="mobileNav">
-        <a href="#search" class="nav-link active" data-target="searchSection">Search</a>
+        <a href="#account" class="nav-link active" data-target="authSection">Account</a>
+        <a href="#search" class="nav-link" data-target="searchSection">Search</a>
         <a href="#inventory" class="nav-link" data-target="inventorySection">Inventory</a>
     </nav>
 </header>

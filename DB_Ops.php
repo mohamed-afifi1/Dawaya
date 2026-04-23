@@ -4,6 +4,10 @@
 //  Handles all CRUD for Inventory & Uploads tables
 // ============================================================
 
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
 // ── Connection ───────────────────────────────────────────────
 function getConnection(): PDO {
 $host = '127.0.0.1';
@@ -35,6 +39,133 @@ function respond(bool $success, mixed $data = null, string $error = ''): void {
         : ['success' => false, 'error' => $error]
     );
     exit;
+}
+
+// ============================================================
+//  AUTHENTICATION & AUTHORIZATION
+// ============================================================
+
+function ensureUsersTableAndSeed(): void {
+    $pdo = getConnection();
+    $pdo->exec('
+        CREATE TABLE IF NOT EXISTS Users (
+            id INT NOT NULL AUTO_INCREMENT,
+            full_name VARCHAR(120) NOT NULL,
+            username VARCHAR(80) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            role ENUM("customer", "pharmacy") NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ');
+
+    $count = (int) $pdo->query('SELECT COUNT(*) FROM Users')->fetchColumn();
+    if ($count > 0) {
+        return;
+    }
+
+    $stmt = $pdo->prepare('INSERT INTO Users (full_name, username, password_hash, role) VALUES (:full_name, :username, :password_hash, :role)');
+
+    $defaultUsers = [
+        ['Customer User', 'customer', 'customer123', 'customer'],
+        ['Pharmacy User', 'pharmacy', 'pharmacy123', 'pharmacy'],
+    ];
+
+    foreach ($defaultUsers as [$fullName, $username, $plainPassword, $role]) {
+        $stmt->execute([
+            ':full_name'     => $fullName,
+            ':username'      => $username,
+            ':password_hash' => password_hash($plainPassword, PASSWORD_DEFAULT),
+            ':role'          => $role,
+        ]);
+    }
+}
+
+function loginUser(string $username, string $password): array|false {
+    ensureUsersTableAndSeed();
+    $pdo = getConnection();
+    $stmt = $pdo->prepare('SELECT id, full_name, username, password_hash, role FROM Users WHERE username = :username LIMIT 1');
+    $stmt->execute([':username' => $username]);
+    $user = $stmt->fetch();
+
+    if (!$user || !password_verify($password, $user['password_hash'])) {
+        return false;
+    }
+
+    return [
+        'id'        => (int) $user['id'],
+        'full_name' => $user['full_name'],
+        'username'  => $user['username'],
+        'role'      => $user['role'],
+    ];
+}
+
+function registerUser(string $fullName, string $username, string $password, string $role): array {
+    ensureUsersTableAndSeed();
+
+    $fullName = trim($fullName);
+    $username = strtolower(trim($username));
+    $role = strtolower(trim($role));
+
+    if ($fullName === '' || mb_strlen($fullName) < 3) {
+        respond(false, error: 'Full name must be at least 3 characters.');
+    }
+
+    if (!preg_match('/^[a-z0-9_]{3,30}$/', $username)) {
+        respond(false, error: 'Username must be 3-30 chars using letters, numbers, or underscore.');
+    }
+
+    if (strlen($password) < 6) {
+        respond(false, error: 'Password must be at least 6 characters.');
+    }
+
+    if (!in_array($role, ['customer', 'pharmacy'], true)) {
+        respond(false, error: 'Role must be either customer or pharmacy.');
+    }
+
+    $pdo = getConnection();
+    $existsStmt = $pdo->prepare('SELECT id FROM Users WHERE username = :username LIMIT 1');
+    $existsStmt->execute([':username' => $username]);
+    if ($existsStmt->fetch()) {
+        respond(false, error: 'Username already exists.');
+    }
+
+    $stmt = $pdo->prepare('INSERT INTO Users (full_name, username, password_hash, role) VALUES (:full_name, :username, :password_hash, :role)');
+    $stmt->execute([
+        ':full_name'     => $fullName,
+        ':username'      => $username,
+        ':password_hash' => password_hash($password, PASSWORD_DEFAULT),
+        ':role'          => $role,
+    ]);
+
+    return [
+        'id'        => (int) $pdo->lastInsertId(),
+        'full_name' => $fullName,
+        'username'  => $username,
+        'role'      => $role,
+    ];
+}
+
+function getSessionUser(): array|null {
+    return $_SESSION['user'] ?? null;
+}
+
+function requireAuth(): array {
+    $user = getSessionUser();
+    if (!$user) {
+        http_response_code(401);
+        respond(false, error: 'Authentication required.');
+    }
+    return $user;
+}
+
+function requireRole(array $roles): array {
+    $user = requireAuth();
+    if (!in_array($user['role'], $roles, true)) {
+        http_response_code(403);
+        respond(false, error: 'You are not authorized for this action.');
+    }
+    return $user;
 }
 
 // ============================================================
@@ -299,51 +430,107 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 
     switch ($action) {
 
+        // ── Auth ──────────────────────────────────────────────
+        case 'login':
+            $username = trim((string) ($_POST['username'] ?? ''));
+            $password = (string) ($_POST['password'] ?? '');
+
+            if ($username === '' || $password === '') {
+                respond(false, error: 'Username and password are required.');
+            }
+
+            $user = loginUser($username, $password);
+            if (!$user) {
+                http_response_code(401);
+                respond(false, error: 'Invalid username or password.');
+            }
+
+            $_SESSION['user'] = $user;
+            respond(true, ['user' => $user]);
+            break;
+
+        case 'register':
+            $fullName = (string) ($_POST['full_name'] ?? '');
+            $username = (string) ($_POST['username'] ?? '');
+            $password = (string) ($_POST['password'] ?? '');
+            $role = (string) ($_POST['role'] ?? 'customer');
+
+            $user = registerUser($fullName, $username, $password, $role);
+            $_SESSION['user'] = $user;
+            respond(true, ['user' => $user]);
+            break;
+
+        case 'logout':
+            $_SESSION = [];
+            if (ini_get('session.use_cookies')) {
+                $params = session_get_cookie_params();
+                setcookie(session_name(), '', time() - 42000,
+                    $params['path'], $params['domain'],
+                    $params['secure'], $params['httponly']
+                );
+            }
+            session_destroy();
+            respond(true, ['logged_out' => true]);
+            break;
+
+        case 'get_session':
+            respond(true, ['user' => getSessionUser()]);
+            break;
+
         // ── Inventory ──────────────────────────────────────────
         case 'get_all_medicines':
+            requireAuth();
             // Capture the search query from the URL if it exists
             $search = $_GET['search'] ?? ''; 
             respond(true, getAllMedicines($search));
             break;
 
         case 'get_medicine':
+            requireAuth();
             $id = (int)($_GET['id'] ?? 0);
             $result = getMedicineById($id);
             $result ? respond(true, $result) : respond(false, error: 'Not found.');
             break;
 
         case 'add_medicine':
+            requireRole(['pharmacy']);
             $id = addMedicine($_POST);
             $id ? respond(true, ['id' => $id]) : respond(false, error: 'Insert failed.');
             break;
 
         case 'update_medicine':
+            requireRole(['pharmacy']);
             $id = (int)($_POST['id'] ?? 0);
             updateMedicine($id, $_POST) ? respond(true) : respond(false, error: 'Update failed.');
             break;
 
         case 'adjust_stock':
+            requireRole(['pharmacy']);
             $id    = (int)($_POST['id']    ?? 0);
             $delta = (int)($_POST['delta'] ?? 0);
             adjustStock($id, $delta) ? respond(true) : respond(false, error: 'Stock update failed.');
             break;
 
         case 'delete_medicine':
+            requireRole(['pharmacy']);
             $id = (int)($_POST['id'] ?? 0);
             deleteMedicine($id) ? respond(true) : respond(false, error: 'Delete failed.');
             break;
 
         case 'get_inventory_stats':
+            requireAuth();
             respond(true, getInventoryStats());
             break;
 
         case 'get_low_stock':
+            requireAuth();
             $threshold = (int)($_GET['threshold'] ?? 10);
             respond(true, getLowStockMedicines($threshold));
             break;
 
         // ── Uploads ───────────────────────────────────────────
         case 'get_all_uploads':
+            requireRole(['pharmacy']);
             respond(true, getAllUploads(
                 $_GET['file_type'] ?? '',
                 (int)($_GET['limit']  ?? 50),
@@ -352,12 +539,14 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
             break;
 
         case 'get_upload':
+            requireRole(['pharmacy']);
             $id     = (int)($_GET['id'] ?? 0);
             $result = getUploadById($id);
             $result ? respond(true, $result) : respond(false, error: 'Not found.');
             break;
 
         case 'delete_upload':
+            requireRole(['pharmacy']);
             $id = (int)($_POST['id'] ?? 0);
             deleteUpload($id) ? respond(true) : respond(false, error: 'Delete failed.');
             break;

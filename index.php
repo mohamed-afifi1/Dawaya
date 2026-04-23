@@ -21,8 +21,51 @@
 
     <!-- Main Content Container -->
     <main class="app-main">
+        <div id="authMessage" class="auth-message hidden"></div>
+
+        <!-- ================= AUTH SECTION ================= -->
+        <section id="authSection" class="spa-section active">
+            <div class="section-intro">
+                <h2>Account Access</h2>
+                <p>Sign in or create a new account to use Dawaya features.</p>
+            </div>
+
+            <div class="auth-shell">
+                <div class="auth-tabs">
+                    <button id="showLoginTab" class="auth-tab active" type="button">Login</button>
+                    <button id="showRegisterTab" class="auth-tab" type="button">Register</button>
+                </div>
+
+                <form id="loginForm" class="auth-form" autocomplete="off">
+                    <div class="auth-grid">
+                        <input type="text" id="loginUsername" placeholder="Username" required>
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="btn-primary auth-submit">Login</button>
+                </form>
+
+                <form id="registerForm" class="auth-form hidden" autocomplete="off">
+                    <div class="auth-grid">
+                        <input type="text" id="registerFullName" placeholder="Full name" required>
+                        <input type="text" id="registerUsername" placeholder="Username" required>
+                        <input type="password" id="registerPassword" placeholder="Password (min 6 chars)" required>
+                        <select id="registerRole" required>
+                            <option value="customer" selected>Customer</option>
+                            <option value="pharmacy">Pharmacy</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary auth-submit">Create Account</button>
+                </form>
+
+                <div id="sessionBox" class="session-box hidden">
+                    <span id="sessionUserText"></span>
+                    <button id="logoutBtn" class="btn-secondary btn-auth" type="button">Logout</button>
+                </div>
+            </div>
+        </section>
+
         <!-- ================= SEARCH SECTION ================= -->
-        <section id="searchSection" class="spa-section active">
+        <section id="searchSection" class="spa-section hidden">
             <div class="section-intro">
                 <h2>Drug Index Search</h2>
                 <p>Query clinical data and international drug databases.</p>
@@ -53,6 +96,8 @@
 
         <!-- ================= INVENTORY SECTION ================= -->
         <section id="inventorySection" class="spa-section hidden">
+
+        <div id="inventoryRoleNote" class="role-note hidden"></div>
 
         <div class="section-header">
             <div class="section-intro">

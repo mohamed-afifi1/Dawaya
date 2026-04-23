@@ -1,4 +1,23 @@
 export const Router = {
+  canAccessInventory() {
+    const role = window.AuthModule?.getRole?.() || null;
+    return role === "pharmacy";
+  },
+
+  handleInventoryDenied() {
+    if (window.AuthModule) {
+      window.AuthModule.setAuthMessage("Inventory is available for Pharmacy accounts only.", true);
+    }
+
+    if (window.AuthModule?.isAuthenticated?.()) {
+      this.switchSection("searchSection");
+      window.location.hash = "#search";
+    } else {
+      this.switchSection("authSection");
+      window.location.hash = "#account";
+    }
+  },
+
   init() {
     const navLinks = document.querySelectorAll(".nav-link");
 
@@ -6,6 +25,11 @@ export const Router = {
       link.addEventListener("click", (e) => {
         e.preventDefault();
         const target = link.dataset.target;
+
+        if (target === "inventorySection" && !this.canAccessInventory()) {
+          this.handleInventoryDenied();
+          return;
+        }
 
         // Only switch if we aren't already on that section
         if (!document.getElementById(target).classList.contains("active")) {
@@ -24,8 +48,8 @@ export const Router = {
         this.switchSection(initialLink.dataset.target);
       }
     } else {
-      // Default to search if no hash
-      this.switchSection("searchSection");
+      // Default to account if no hash
+      this.switchSection("authSection");
     }
 
     // --- Mobile Menu Toggle ---
@@ -50,6 +74,11 @@ export const Router = {
   },
 
   switchSection(targetId) {
+    if (targetId === "inventorySection" && !this.canAccessInventory()) {
+      this.handleInventoryDenied();
+      return;
+    }
+
     const sections = document.querySelectorAll(".spa-section");
     const navLinks = document.querySelectorAll(".nav-link");
 
@@ -87,4 +116,17 @@ export const Router = {
       window.InventoryModule.loadTable();
     }
   },
+
+  updateAuthUI(user) {
+    const navLinks = document.querySelectorAll('.nav-link[data-target="inventorySection"]');
+    navLinks.forEach((link) => {
+      if (!user || user.role !== "pharmacy") {
+        link.classList.add("disabled");
+      } else {
+        link.classList.remove("disabled");
+      }
+    });
+  },
 };
+// Expose to window for global access
+window.Router = Router;

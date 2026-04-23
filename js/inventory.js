@@ -17,6 +17,7 @@ export const InventoryModule = {
     selectedDrug: null,
     debounceTimer: null,
     deleteTargetId: null,
+    role: null,
   },
 
   init() {
@@ -24,6 +25,7 @@ export const InventoryModule = {
     this.setupAutocomplete();
     this.setupFormSubmissions();
     this.setupModalClosing();
+    this.applyRoleUI();
 
     // Expose functions to window for inline onclick attributes
     window.appContext = {
@@ -39,6 +41,11 @@ export const InventoryModule = {
 
     try {
       const response = await fetch("DB_Ops.php?action=get_all_medicines");
+      if (response.status === 401) {
+        this.tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;">Please login to view inventory.</td></tr>`;
+        return;
+      }
+
       const res = await response.json();
 
       this.tableBody.innerHTML = "";
@@ -59,6 +66,7 @@ export const InventoryModule = {
 
   createRowHTML(item) {
     const row = document.createElement("tr");
+    const canManage = this.state.role === "pharmacy";
 
     const medicineName = item.medicine_name || "Unknown Medicine";
     const genericName = item.generic_name || "N/A";
@@ -71,6 +79,17 @@ export const InventoryModule = {
 
     const imgSrc = item.image_path ? item.image_path : 'https://placehold.co/50x50/eee/999?text=Rx';
 
+    const actionButtons = canManage
+      ? `
+          <button class="action-btn" onclick="appContext.editItem(${item.id}, '${escapedName}', ${price}, ${stock}, '${(item.generic_name || "").replace(/'/g, "\\'")}', '${(item.atc_code || "").replace(/'/g, "\\'")}', '${(item.category || "").replace(/'/g, "\\'")}', '${(item.source || "").replace(/'/g, "\\'")}')" title="Edit Item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          </button>
+          <button class="action-btn del" onclick="appContext.deleteItem(${item.id}, '${escapedName}')" title="Delete Item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          </button>
+        `
+      : `<span style="color:var(--text-light);font-size:12px;">Read only</span>`;
+
     row.innerHTML = `
             <td><img src="${imgSrc}" class="inventory-img"></td>
             <td>
@@ -82,12 +101,7 @@ export const InventoryModule = {
             <td><strong>EGP ${price}</strong></td>
             <td><span class="stock-badge ${stockClass}">${stock}u</span></td>
             <td class="action-btns">
-                <button class="action-btn" onclick="appContext.editItem(${item.id}, '${escapedName}', ${price}, ${stock}, '${(item.generic_name || "").replace(/'/g, "\\'")}', '${(item.atc_code || "").replace(/'/g, "\\'")}', '${(item.category || "").replace(/'/g, "\\'")}', '${(item.source || "").replace(/'/g, "\\'")}')" title="Edit Item">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                </button>
-                <button class="action-btn del" onclick="appContext.deleteItem(${item.id}, '${escapedName}')" title="Delete Item">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                </button>
+              ${actionButtons}
             </td>
         `;
     return row;
@@ -162,6 +176,11 @@ export const InventoryModule = {
   setupFormSubmissions() {
     this.addForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      if (this.state.role !== "pharmacy") {
+        alert("Only Pharmacy users can add medicines.");
+        return;
+      }
       
       if (this.invNameInput.value.trim() === "") {
         alert("Please enter a medicine name.");
@@ -193,10 +212,13 @@ export const InventoryModule = {
       }
 
       try {
-        const res = await fetch("DB_Ops.php", {
+        const response = await fetch("DB_Ops.php", {
           method: "POST",
           body: formData,
-        }).then((r) => r.json());
+        });
+
+        const res = await response.json();
+
         if (res.success) {
           this.addForm.reset();
           this.addBtn.disabled = true;
@@ -211,6 +233,11 @@ export const InventoryModule = {
 
     this.editForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      if (this.state.role !== "pharmacy") {
+        alert("Only Pharmacy users can edit medicines.");
+        return;
+      }
 
       const formData = new FormData();
       formData.append("action", "update_medicine");
@@ -250,7 +277,31 @@ export const InventoryModule = {
     });
   },
 
+  prefillForm(drug) {
+    if (!this.invNameInput) return;
+
+    this.invNameInput.value = drug.brand_name || "";
+    document.getElementById("invGenericName").value = drug.generic_name || "";
+    document.getElementById("invAtcCode").value = drug.atc_code || "";
+    document.getElementById("invDrugType").value = drug.product_type || "Other";
+    document.getElementById("invCategory").value = drug.atc_code || "General";
+    document.getElementById("invSource").value = "Import";
+
+    this.addBtn.disabled = false;
+
+    // Smooth scroll to form and focus price
+    this.addForm.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      document.getElementById("invPrice").focus();
+    }, 500);
+  },
+
   openDeleteModal(id, name) {
+    if (this.state.role !== "pharmacy") {
+      alert("Only Pharmacy users can delete medicines.");
+      return;
+    }
+
     this.state.deleteTargetId = id;
     document.getElementById("deleteTargetName").textContent = name;
     this.deleteModal.classList.remove("hidden");
@@ -264,10 +315,12 @@ export const InventoryModule = {
     formData.append("id", this.state.deleteTargetId);
 
     try {
-      const res = await fetch("DB_Ops.php", {
+      const response = await fetch("DB_Ops.php", {
         method: "POST",
         body: formData,
-      }).then((r) => r.json());
+      });
+
+      const res = await response.json();
       
       if (res.success) {
         this.deleteModal.classList.add("hidden");
@@ -283,6 +336,11 @@ export const InventoryModule = {
   },
 
   openEditModal(id, name, price, stock, generic, atc, category, source) {
+    if (this.state.role !== "pharmacy") {
+      alert("Only Pharmacy users can edit medicines.");
+      return;
+    }
+
     document.getElementById("editInvId").value = id;
     document.getElementById("editInvName").value = name;
     document.getElementById("editInvPrice").value = price;
@@ -327,4 +385,35 @@ export const InventoryModule = {
       if (e.target === this.deleteModal) this.deleteModal.classList.add("hidden");
     });
   },
+
+  updateRole(role) {
+    this.state.role = role;
+    this.applyRoleUI();
+    this.loadTable();
+  },
+
+  applyRoleUI() {
+    const note = document.getElementById("inventoryRoleNote");
+    if (!note) return;
+
+    if (!this.state.role) {
+      if (this.addForm) this.addForm.classList.add("hidden");
+      note.textContent = "Login required to access inventory.";
+      note.classList.remove("hidden");
+      return;
+    }
+
+    if (this.state.role === "pharmacy") {
+      if (this.addForm) this.addForm.classList.remove("hidden");
+      note.classList.add("hidden");
+      return;
+    }
+
+    if (this.addForm) this.addForm.classList.add("hidden");
+    note.textContent = "Customer role: read-only inventory access.";
+    note.classList.remove("hidden");
+  },
 };
+
+// Expose to window for global access
+window.InventoryModule = InventoryModule;

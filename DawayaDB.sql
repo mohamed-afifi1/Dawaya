@@ -27,3 +27,13 @@ CREATE TABLE IF NOT EXISTS Uploads (
     uploaded_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS Users (
+    id            INT          NOT NULL AUTO_INCREMENT,
+    full_name     VARCHAR(120) NOT NULL,
+    username      VARCHAR(80)  NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role          ENUM('customer', 'pharmacy') NOT NULL,
+    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
