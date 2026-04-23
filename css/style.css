@@ -184,6 +184,56 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    position: relative;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.search-suggestions {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: var(--shadow-md);
+}
+
+.search-suggestions div {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.2s;
+    font-size: 14px;
+}
+
+.search-suggestions div:hover {
+    background-color: #f9fafb;
+}
+
+.search-suggestions div strong {
+    color: var(--primary-color);
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    flex: 1;
+}
+.input-group input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 15px;
+    background: transparent;
 }
 
 .search-input-wrapper input {
@@ -333,7 +383,6 @@ body {
 
 .inline-form {
     display: flex;
-    justify-content: space-between;
     gap: 12px;
     background: var(--bg-card);
     padding: 12px;
@@ -342,39 +391,46 @@ body {
 }
 
 .inline-form input {
-    border: 1px solid var(--border-color);
-    padding: 10px 14px;
-    border-radius: var(--radius-sm);
+    border: none;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
     font-size: 14px;
     outline: none;
     width: 100%;
+    background: transparent;
+    transition: background-color 0.2s;
+    flex: 1;
+    min-width: 120px;
 }
 
 .inline-form input:focus {
-    border-color: var(--primary-color);
+    background-color: var(--border-light);
 }
 
 .inline-form input[type="file"] {
     height: auto;
-    width: auto;
-    padding: 10px;
+    flex: 0 1 auto;
+    padding: 8px;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
     background: var(--bg-main);
+    border-radius: var(--radius-md);
+    max-width: 180px;
 }
 
-.inline-form input[type="file"]::file-selector-button {
-    border: none;
-    background: var(--border-color);
-    color: var(--text-main);
-    padding: 6px 12px;
+.inventory-img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
     border-radius: var(--radius-sm);
-    cursor: pointer;
-    margin-right: 10px;
-    transition: background-color 0.2s, color 0.2s;
-    font-size: 13px;
-    font-weight: 500;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s;
+}
+
+.inventory-img:hover {
+    transform: scale(1.1);
 }
 
 .inline-form input[type="file"]::file-selector-button:hover {
@@ -439,18 +495,30 @@ body {
 }
 
 .action-btn {
-    background: none;
-    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
     cursor: pointer;
-    color: var(--text-light);
-    transition: color 0.2s;
+    transition: all 0.2s ease;
 }
 
 .action-btn:hover {
+    background: #f0faf8;
     color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
+
 .action-btn.del:hover {
+    background: #fef2f2;
     color: var(--danger);
+    border-color: #fca5a5;
 }
 .text-right {
     text-align: right !important;
@@ -639,8 +707,14 @@ body {
     border: none;
     cursor: pointer;
     gap: 5px;
-    padding: 8px;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s;
     margin-right: 8px;
+}
+
+.hamburger-menu:hover {
+    background-color: var(--border-light);
 }
 
 .hamburger-menu span {
@@ -652,15 +726,16 @@ body {
 }
 
 .hamburger-menu.active span:nth-child(1) {
-    transform: rotate(45deg) translate(10px, 10px);
+    transform: translateY(8px) rotate(45deg);
 }
 
 .hamburger-menu.active span:nth-child(2) {
     opacity: 0;
+    transform: translateX(-10px);
 }
 
 .hamburger-menu.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -7px);
+    transform: translateY(-8px) rotate(-45deg);
 }
 
 /* Mobile Navigation */
@@ -743,7 +818,7 @@ body {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.5);
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;

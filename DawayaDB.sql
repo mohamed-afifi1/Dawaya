@@ -1,17 +1,29 @@
-CREATE DATABASE IF NOT EXISTS dawaya_db;
-USE dawaya_db;
+CREATE DATABASE IF NOT EXISTS DawayaDB;
+USE DawayaDB;
 
-CREATE TABLE IF NOT EXISTS inventory (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    medicine_name VARCHAR(255) NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    stock INT NOT NULL,
-    image_path VARCHAR(255) DEFAULT NULL
-);
+CREATE TABLE IF NOT EXISTS Inventory (
+    id            INT            NOT NULL AUTO_INCREMENT,
+    medicine_name VARCHAR(255)   NOT NULL,
+    generic_name  VARCHAR(255)   NOT NULL DEFAULT '',
+    atc_code      VARCHAR(20)    NOT NULL DEFAULT '',
+    drug_type VARCHAR(50) NOT NULL DEFAULT 'Other',
+    category      VARCHAR(100)   NOT NULL DEFAULT '',
+    source        VARCHAR(20) NOT NULL DEFAULT 'Local',
+    price         DECIMAL(10,2)  NOT NULL,
+    stock         INT            NOT NULL DEFAULT 0,
+    image_path    VARCHAR(500)   NOT NULL DEFAULT '',
+    created_at    DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS uploads (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    file_name VARCHAR(255) NOT NULL,
-    file_path VARCHAR(255) NOT NULL,
-    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+CREATE TABLE IF NOT EXISTS Uploads (
+    id          INT          NOT NULL AUTO_INCREMENT,
+    file_name   VARCHAR(255) NOT NULL,
+    file_path   VARCHAR(500) NOT NULL,
+    file_type   ENUM('prescription','lab_result','other') NOT NULL DEFAULT 'other',
+    mime_type   VARCHAR(100) NOT NULL DEFAULT '',
+    file_size   INT          NOT NULL DEFAULT 0,
+    uploaded_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

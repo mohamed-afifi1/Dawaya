@@ -34,6 +34,7 @@
                     <div class="search-input-wrapper">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         <input type="text" id="searchInput" placeholder="Search by brand, generic name..." required>
+                        <div id="searchSuggestions" class="search-suggestions hidden"></div>
                     </div>
                     <button type="submit" class="btn-primary" id="searchBtn">
                         <span class="btn-text">Search</span>
@@ -60,11 +61,22 @@
             </div>
 
             <form id="addInventoryForm" class="inline-form" enctype="multipart/form-data">
-                <input type="text" id="invName" placeholder="Medicine name" required>
+                <div class="input-group">
+                    <input type="text" id="invName" placeholder="Medicine name" required autocomplete="off">
+                    <div id="invSuggestions" class="search-suggestions hidden"></div>
+                </div>
+                
+                <!-- Hidden fields populated by autocomplete -->
+                <input type="hidden" id="invGenericName">
+                <input type="hidden" id="invAtcCode">
+                <input type="hidden" id="invDrugType">
+                <input type="hidden" id="invCategory">
+                <input type="hidden" id="invSource" value="Local">
+
                 <input type="number" step="0.01" id="invPrice" placeholder="Price" required>
                 <input type="number" id="invStock" placeholder="Stock" required>
                 <input type="file" id="invImage" accept="image/*" title="Medicine Image">
-                <button type="submit" class="btn-primary">Add Item</button>
+                <button type="submit" class="btn-primary" id="addBtn" disabled>Add Item</button>
             </form>
         </div>
 
@@ -89,6 +101,12 @@
                     <h3>Edit Medicine</h3>
                     <form id="editInventoryForm" class="modal-form">
                         <input type="hidden" id="editInvId">
+                        <!-- Hidden metadata fields to prevent data loss during edit -->
+                        <input type="hidden" id="editInvGenericName">
+                        <input type="hidden" id="editInvAtcCode">
+                        <input type="hidden" id="editInvCategory">
+                        <input type="hidden" id="editInvSource">
+
                         <input type="text" id="editInvName" placeholder="Medicine name" required class="modal-input">
                         <input type="number" step="0.01" id="editInvPrice" placeholder="Price" required class="modal-input">
                         <input type="number" id="editInvStock" placeholder="Stock" required class="modal-input">
@@ -101,6 +119,22 @@
                     </form>
                 </div>
             </div>
+            <!-- Delete Confirmation Modal -->
+            <div id="deleteConfirmModal" class="modal-overlay hidden">
+                <div class="modal-content">
+                    <div style="text-align: center; padding: 10px;">
+                        <div style="color: var(--danger); margin-bottom: 15px;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </div>
+                        <h3>Confirm Delete</h3>
+                        <p style="color: var(--text-muted); margin: 10px 0 20px;">Are you sure you want to remove <strong id="deleteTargetName"></strong>? This action cannot be undone.</p>
+                        <div class="modal-actions">
+                            <button id="confirmDeleteBtn" class="btn-primary" style="background-color: var(--danger); flex: 1;">Delete</button>
+                            <button id="cancelDeleteBtn" class="btn-secondary" style="flex: 1;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
     </main>
@@ -110,6 +144,6 @@
 
     <!-- Main JS Application Logic -->
     <script src="js/API_Ops.js"></script>
-    <script src="js/main.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

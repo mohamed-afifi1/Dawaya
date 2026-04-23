@@ -2,7 +2,7 @@
 // Upload.php
 header('Content-Type: application/json');
 $host = '127.0.0.1';
-$db   = 'dawaya_db';
+$db   = 'dawayadb';
 $user = 'root';
 $pass = '';
 
