@@ -118,8 +118,8 @@
                 <input type="hidden" id="invCategory">
                 <input type="hidden" id="invSource" value="Local">
 
-                <input type="number" step="0.01" id="invPrice" placeholder="Price" required>
-                <input type="number" id="invStock" placeholder="Stock" required>
+                <input type="number" step="0.01" min="0" id="invPrice" placeholder="Price" required>
+                <input type="number" min="0" id="invStock" placeholder="Stock" required>
                 <input type="file" id="invImage" accept="image/*" title="Medicine Image">
                 <button type="submit" class="btn-primary" id="addBtn" disabled>Add Item</button>
             </form>
@@ -153,8 +153,8 @@
                         <input type="hidden" id="editInvSource">
 
                         <input type="text" id="editInvName" placeholder="Medicine name" required class="modal-input">
-                        <input type="number" step="0.01" id="editInvPrice" placeholder="Price" required class="modal-input">
-                        <input type="number" id="editInvStock" placeholder="Stock" required class="modal-input">
+                        <input type="number" step="0.01" min="0" id="editInvPrice" placeholder="Price" required class="modal-input">
+                        <input type="number" min="0" id="editInvStock" placeholder="Stock" required class="modal-input">
                         <label class="modal-label">Update Image (Optional)</label>
                         <input type="file" id="editInvImage" accept="image/*" class="modal-input">
                         <div class="modal-actions">

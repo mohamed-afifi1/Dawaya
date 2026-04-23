@@ -113,6 +113,8 @@ export const SearchModule = {
   renderResults(apiRes, invRes, query) {
     const container = document.getElementById("searchResults");
     container.innerHTML = "";
+    const currentRole = window.AuthModule?.getRole?.() || null;
+    const isCustomer = currentRole === "customer";
 
     if (
       (apiRes.status === "error" && /authentication required/i.test(apiRes.message || "")) ||
@@ -146,6 +148,11 @@ export const SearchModule = {
         if (apiBrand === localName && apiBrand.length > 3) return true;
         return false;
       });
+
+      // Customer users can only see medicines that already exist locally.
+      if (isCustomer && !localMatch) {
+        return;
+      }
 
       const card = document.createElement("div");
       card.className = "result-card";
@@ -183,6 +190,10 @@ export const SearchModule = {
       }
       container.appendChild(card);
     });
+
+    if (container.children.length === 0 && isCustomer) {
+      container.innerHTML = `<div class="error-text">No matches found for "${query}" in local inventory.</div>`;
+    }
   },
 
   getPurpose(drug) {
