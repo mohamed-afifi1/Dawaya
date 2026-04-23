@@ -14,9 +14,15 @@ require_once 'header.php';
     <!-- Search Form -->
     <div class="search-container">
         <form id="searchForm" class="search-form">
-            <div class="search-input-wrapper">
+            <div class="search-input-wrapper" style="position: relative;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="searchInput" placeholder="Search by brand, generic name..." required>
+                <input type="text" id="searchInput" placeholder="Search by brand, generic name..." required autocomplete="off">
+                <div id="searchSuggestions" style="
+                    position:absolute; top:100%; left:0; right:0;
+                    background:white; border:1px solid #e5e7eb;
+                    border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+                    z-index:999; display:none; max-height:200px; overflow-y:auto;">
+                </div>
             </div>
             <button type="submit" class="btn-primary" id="searchBtn">
                 <span class="btn-text">Search</span>
@@ -42,12 +48,26 @@ require_once 'header.php';
             <p>Manage your stock levels directly.</p>
         </div>
         
-        <form id="addInventoryForm" class="inline-form" enctype="multipart/form-data">
-            <input type="text" id="invName" placeholder="Medicine name" required>
+        <form id="addInventoryForm" class="inline-form">
+            <div style="position:relative;">
+                <input type="text" id="invName" placeholder="Search medicine name..." required autocomplete="off">
+                <div id="invSuggestions" style="
+                    position:absolute; top:100%; left:0; right:0;
+                    background:white; border:1px solid #e5e7eb;
+                    border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+                    z-index:999; display:none; max-height:200px; overflow-y:auto;">
+                </div>
+            </div>
+            <!-- Hidden fields auto-filled from API -->
+            <input type="hidden" id="invGenericName">
+            <input type="hidden" id="invAtcCode">
+            <input type="hidden" id="invDrugType">
+            <input type="hidden" id="invCategory">
+            <input type="hidden" id="invSource" value="Import">
             <input type="number" step="0.01" id="invPrice" placeholder="Price" required>
             <input type="number" id="invStock" placeholder="Stock" required>
             <input type="file" id="invImage" accept="image/*" title="Medicine Image">
-            <button type="submit" class="btn-primary">Add Item</button>
+            <button type="submit" class="btn-primary" id="addBtn" disabled>Add Item</button>
         </form>
     </div>
 

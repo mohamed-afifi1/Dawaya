@@ -13,6 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Main Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/API_Ops.js"></script> <script type="module" src="js/app.js"></script>
 </head>
 <body>
     
