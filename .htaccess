@@ -1,0 +1,16 @@
+# Fix JS Modules MIME Type for InfinityFree
+AddType application/javascript .js
+AddType text/css .css
+
+# Prevent access to sensitive files
+<FilesMatch "^\.env|^\.gitignore">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Prevent caching of assets during development
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires 0
+</IfModule>

@@ -9,13 +9,24 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 // ── Connection ───────────────────────────────────────────────
-function getConnection(): PDO {
-$host = '127.0.0.1';
-$db   = 'dawayadb';
-$user = 'root';
-$pass = '';
-    $charset = 'utf8mb4';
+function getConnection(): PDO
+{
+    // Detect environment
+    $isLocal = ($_SERVER['SERVER_NAME'] === 'localhost' || $_SERVER['REMOTE_ADDR'] === '127.0.0.1' || $_SERVER['REMOTE_ADDR'] === '::1');
 
+    if ($isLocal) {
+        $host = 'localhost';
+        $db   = 'dawayadb';
+        $user = 'root';
+        $pass = '';
+    } else {
+        $host = 'sql312.infinityfree.com';
+        $db   = 'if0_41738124_dawaya_db';
+        $user = 'if0_41738124';
+        $pass = 'UL1bVCBAGW';
+    }
+
+    $charset = 'utf8mb4';
     $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
     $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -27,15 +38,18 @@ $pass = '';
         return new PDO($dsn, $user, $pass, $options);
     } catch (PDOException $e) {
         http_response_code(500);
-        die(json_encode(['success' => false, 'error' => 'Database connection failed.']));
+        $errorMsg = $isLocal ? "Local DB error: " . $e->getMessage() : "Database connection failed.";
+        die(json_encode(['success' => false, 'error' => $errorMsg]));
     }
 }
 
 // ── Response Helper ──────────────────────────────────────────
-function respond(bool $success, mixed $data = null, string $error = ''): void {
+function respond(bool $success, mixed $data = null, string $error = ''): void
+{
     header('Content-Type: application/json');
-    echo json_encode($success
-        ? ['success' => true,  'data'  => $data]
+    echo json_encode(
+        $success
+        ? ['success' => true, 'data' => $data]
         : ['success' => false, 'error' => $error]
     );
     exit;
@@ -45,7 +59,8 @@ function respond(bool $success, mixed $data = null, string $error = ''): void {
 //  AUTHENTICATION & AUTHORIZATION
 // ============================================================
 
-function ensureUsersTableAndSeed(): void {
+function ensureUsersTableAndSeed(): void
+{
     $pdo = getConnection();
     $pdo->exec('
         CREATE TABLE IF NOT EXISTS Users (
@@ -73,15 +88,16 @@ function ensureUsersTableAndSeed(): void {
 
     foreach ($defaultUsers as [$fullName, $username, $plainPassword, $role]) {
         $stmt->execute([
-            ':full_name'     => $fullName,
-            ':username'      => $username,
+            ':full_name' => $fullName,
+            ':username' => $username,
             ':password_hash' => password_hash($plainPassword, PASSWORD_DEFAULT),
-            ':role'          => $role,
+            ':role' => $role,
         ]);
     }
 }
 
-function loginUser(string $username, string $password): array|false {
+function loginUser(string $username, string $password): array|false
+{
     ensureUsersTableAndSeed();
     $pdo = getConnection();
     $stmt = $pdo->prepare('SELECT id, full_name, username, password_hash, role FROM Users WHERE username = :username LIMIT 1');
@@ -93,14 +109,15 @@ function loginUser(string $username, string $password): array|false {
     }
 
     return [
-        'id'        => (int) $user['id'],
+        'id' => (int) $user['id'],
         'full_name' => $user['full_name'],
-        'username'  => $user['username'],
-        'role'      => $user['role'],
+        'username' => $user['username'],
+        'role' => $user['role'],
     ];
 }
 
-function registerUser(string $fullName, string $username, string $password, string $role): array {
+function registerUser(string $fullName, string $username, string $password, string $role): array
+{
     ensureUsersTableAndSeed();
 
     $fullName = trim($fullName);
@@ -132,25 +149,27 @@ function registerUser(string $fullName, string $username, string $password, stri
 
     $stmt = $pdo->prepare('INSERT INTO Users (full_name, username, password_hash, role) VALUES (:full_name, :username, :password_hash, :role)');
     $stmt->execute([
-        ':full_name'     => $fullName,
-        ':username'      => $username,
+        ':full_name' => $fullName,
+        ':username' => $username,
         ':password_hash' => password_hash($password, PASSWORD_DEFAULT),
-        ':role'          => $role,
+        ':role' => $role,
     ]);
 
     return [
-        'id'        => (int) $pdo->lastInsertId(),
+        'id' => (int) $pdo->lastInsertId(),
         'full_name' => $fullName,
-        'username'  => $username,
-        'role'      => $role,
+        'username' => $username,
+        'role' => $role,
     ];
 }
 
-function getSessionUser(): array|null {
+function getSessionUser(): array|null
+{
     return $_SESSION['user'] ?? null;
 }
 
-function requireAuth(): array {
+function requireAuth(): array
+{
     $user = getSessionUser();
     if (!$user) {
         http_response_code(401);
@@ -159,7 +178,8 @@ function requireAuth(): array {
     return $user;
 }
 
-function requireRole(array $roles): array {
+function requireRole(array $roles): array
+{
     $user = requireAuth();
     if (!in_array($user['role'], $roles, true)) {
         http_response_code(403);
@@ -173,9 +193,10 @@ function requireRole(array $roles): array {
 // ============================================================
 
 // ── READ: Get all medicines (with optional search & filters) ─
-function getAllMedicines(string $search = ''): array {
+function getAllMedicines(string $search = ''): array
+{
     $pdo = getConnection();
-    
+
     if ($search !== '') {
         // Use LIKE to find the medicine name or generic name
         $stmt = $pdo->prepare("SELECT * FROM Inventory WHERE medicine_name LIKE ? OR generic_name LIKE ? ORDER BY created_at DESC");
@@ -184,28 +205,31 @@ function getAllMedicines(string $search = ''): array {
     } else {
         $stmt = $pdo->query("SELECT * FROM Inventory ORDER BY created_at DESC");
     }
-    
+
     return $stmt->fetchAll();
 }
 
 // ── READ: Get single medicine by ID ─────────────────────────
-function getMedicineById(int $id): array|false {
-    $pdo  = getConnection();
+function getMedicineById(int $id): array|false
+{
+    $pdo = getConnection();
     $stmt = $pdo->prepare('SELECT * FROM Inventory WHERE id = :id');
     $stmt->execute([':id' => $id]);
     return $stmt->fetch();
 }
 
 // ── READ: Get low-stock medicines ───────────────────────────
-function getLowStockMedicines(int $threshold = 10): array {
-    $pdo  = getConnection();
+function getLowStockMedicines(int $threshold = 10): array
+{
+    $pdo = getConnection();
     $stmt = $pdo->prepare('SELECT * FROM Inventory WHERE stock <= :threshold ORDER BY stock ASC');
     $stmt->execute([':threshold' => $threshold]);
     return $stmt->fetchAll();
 }
 
 // ── CREATE: Add new medicine ─────────────────────────────────
-function addMedicine(array $data): int|false {
+function addMedicine(array $data): int|false
+{
     $required = ['medicine_name', 'price', 'stock'];
     foreach ($required as $field) {
         if (empty($data[$field]) && $data[$field] !== 0) {
@@ -224,17 +248,18 @@ function addMedicine(array $data): int|false {
     $imagePath = '';
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = __DIR__ . '/uploads/';
-        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-        
+        if (!is_dir($uploadDir))
+            mkdir($uploadDir, 0755, true);
+
         $fileName = time() . '_' . basename($_FILES['image']['name']);
         $targetFile = $uploadDir . $fileName;
-        
+
         if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
             $imagePath = 'uploads/' . $fileName;
         }
     }
 
-    $pdo  = getConnection();
+    $pdo = getConnection();
     $stmt = $pdo->prepare('
         INSERT INTO Inventory
             (medicine_name, generic_name, atc_code, drug_type, category, source, price, stock, image_path)
@@ -244,21 +269,22 @@ function addMedicine(array $data): int|false {
 
     $stmt->execute([
         ':medicine_name' => trim($data['medicine_name']),
-        ':generic_name'  => trim($data['generic_name']  ?? ''),
-        ':atc_code'      => trim($data['atc_code']      ?? ''),
-        ':drug_type'     => trim($data['drug_type']     ?? ''),
-        ':category'      => trim($data['category']      ?? ''),
-        ':source'        => trim($data['source']        ?? 'Local'),
-        ':price'         => (float)  $data['price'],
-        ':stock'         => (int)    $data['stock'],
-        ':image_path'    => $imagePath,
+        ':generic_name' => trim($data['generic_name'] ?? ''),
+        ':atc_code' => trim($data['atc_code'] ?? ''),
+        ':drug_type' => trim($data['drug_type'] ?? ''),
+        ':category' => trim($data['category'] ?? ''),
+        ':source' => trim($data['source'] ?? 'Local'),
+        ':price' => (float) $data['price'],
+        ':stock' => (int) $data['stock'],
+        ':image_path' => $imagePath,
     ]);
 
     return (int) $pdo->lastInsertId();
 }
 
 // ── UPDATE: Edit medicine ─────────────────────────────────────
-function updateMedicine(int $id, array $data): bool {
+function updateMedicine(int $id, array $data): bool
+{
     $existing = getMedicineById($id);
     if (!$existing) {
         respond(false, error: 'Medicine not found.');
@@ -275,11 +301,12 @@ function updateMedicine(int $id, array $data): bool {
     $imagePath = $existing['image_path']; // Keep existing by default
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = __DIR__ . '/uploads/';
-        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-        
+        if (!is_dir($uploadDir))
+            mkdir($uploadDir, 0755, true);
+
         $fileName = time() . '_' . basename($_FILES['image']['name']);
         $targetFile = $uploadDir . $fileName;
-        
+
         if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
             // Delete old image if it exists and is not the placeholder
             if ($imagePath && file_exists(__DIR__ . '/' . $imagePath)) {
@@ -289,7 +316,7 @@ function updateMedicine(int $id, array $data): bool {
         }
     }
 
-    $pdo  = getConnection();
+    $pdo = getConnection();
     $stmt = $pdo->prepare('
         UPDATE Inventory SET
             medicine_name = :medicine_name,
@@ -306,22 +333,23 @@ function updateMedicine(int $id, array $data): bool {
     ');
 
     return $stmt->execute([
-        ':id'            => $id,
+        ':id' => $id,
         ':medicine_name' => trim($data['medicine_name']),
-        ':generic_name'  => trim($data['generic_name']  ?? ''),
-        ':atc_code'      => trim($data['atc_code']      ?? ''),
-        ':drug_type'     => trim($data['drug_type']     ?? ''),
-        ':category'      => trim($data['category']      ?? ''),
-        ':source'        => trim($data['source']        ?? 'Local'),
-        ':price'         => (float) $data['price'],
-        ':stock'         => (int)   $data['stock'],
-        ':image_path'    => $imagePath,
+        ':generic_name' => trim($data['generic_name'] ?? ''),
+        ':atc_code' => trim($data['atc_code'] ?? ''),
+        ':drug_type' => trim($data['drug_type'] ?? ''),
+        ':category' => trim($data['category'] ?? ''),
+        ':source' => trim($data['source'] ?? 'Local'),
+        ':price' => (float) $data['price'],
+        ':stock' => (int) $data['stock'],
+        ':image_path' => $imagePath,
     ]);
 }
 
 // ── UPDATE: Adjust stock only (for quick stock operations) ───
-function adjustStock(int $id, int $delta): bool {
-    $pdo  = getConnection();
+function adjustStock(int $id, int $delta): bool
+{
+    $pdo = getConnection();
     // Prevents stock going below 0
     $stmt = $pdo->prepare('
         UPDATE Inventory
@@ -332,18 +360,20 @@ function adjustStock(int $id, int $delta): bool {
 }
 
 // ── DELETE: Remove medicine ───────────────────────────────────
-function deleteMedicine(int $id): bool {
+function deleteMedicine(int $id): bool
+{
     if (!getMedicineById($id)) {
         respond(false, error: 'Medicine not found.');
     }
-    $pdo  = getConnection();
+    $pdo = getConnection();
     $stmt = $pdo->prepare('DELETE FROM Inventory WHERE id = :id');
     return $stmt->execute([':id' => $id]);
 }
 
 // ── READ: Inventory summary stats ────────────────────────────
-function getInventoryStats(): array {
-    $pdo  = getConnection();
+function getInventoryStats(): array
+{
+    $pdo = getConnection();
     $stmt = $pdo->query('
         SELECT
             COUNT(*)                          AS total_medicines,
@@ -361,8 +391,9 @@ function getInventoryStats(): array {
 // ============================================================
 
 // ── CREATE: Save upload record ────────────────────────────────
-function saveUploadRecord(string $fileName, string $filePath, string $fileType, int $fileSize): int {
-    $pdo  = getConnection();
+function saveUploadRecord(string $fileName, string $filePath, string $fileType, int $fileSize): int
+{
+    $pdo = getConnection();
     $stmt = $pdo->prepare('
         INSERT INTO Uploads (file_name, file_path, file_type, file_size)
         VALUES (:file_name, :file_path, :file_type, :file_size)
@@ -377,19 +408,21 @@ function saveUploadRecord(string $fileName, string $filePath, string $fileType, 
 }
 
 // ── READ: Get all uploads (with optional type filter) ────────
-function getAllUploads(string $fileType = '', int $limit = 50, int $offset = 0): array {
-    $pdo    = getConnection();
+function getAllUploads(string $fileType = '', int $limit = 50, int $offset = 0): array
+{
+    $pdo = getConnection();
     $params = [];
-    $where  = '';
+    $where = '';
 
     if ($fileType !== '') {
-        $where          = 'WHERE file_type = :file_type';
+        $where = 'WHERE file_type = :file_type';
         $params[':file_type'] = $fileType;
     }
 
     $stmt = $pdo->prepare("SELECT * FROM Uploads $where ORDER BY uploaded_at DESC LIMIT :limit OFFSET :offset");
-    foreach ($params as $k => $v) $stmt->bindValue($k, $v);
-    $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
+    foreach ($params as $k => $v)
+        $stmt->bindValue($k, $v);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
 
@@ -397,15 +430,17 @@ function getAllUploads(string $fileType = '', int $limit = 50, int $offset = 0):
 }
 
 // ── READ: Get single upload by ID ────────────────────────────
-function getUploadById(int $id): array|false {
-    $pdo  = getConnection();
+function getUploadById(int $id): array|false
+{
+    $pdo = getConnection();
     $stmt = $pdo->prepare('SELECT * FROM Uploads WHERE id = :id');
     $stmt->execute([':id' => $id]);
     return $stmt->fetch();
 }
 
 // ── DELETE: Remove upload record (and optionally the file) ───
-function deleteUpload(int $id, bool $deleteFile = true): bool {
+function deleteUpload(int $id, bool $deleteFile = true): bool
+{
     $upload = getUploadById($id);
     if (!$upload) {
         respond(false, error: 'Upload record not found.');
@@ -415,7 +450,7 @@ function deleteUpload(int $id, bool $deleteFile = true): bool {
         unlink($upload['file_path']);
     }
 
-    $pdo  = getConnection();
+    $pdo = getConnection();
     $stmt = $pdo->prepare('DELETE FROM Uploads WHERE id = :id');
     return $stmt->execute([':id' => $id]);
 }
@@ -464,9 +499,14 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
             $_SESSION = [];
             if (ini_get('session.use_cookies')) {
                 $params = session_get_cookie_params();
-                setcookie(session_name(), '', time() - 42000,
-                    $params['path'], $params['domain'],
-                    $params['secure'], $params['httponly']
+                setcookie(
+                    session_name(),
+                    '',
+                    time() - 42000,
+                    $params['path'],
+                    $params['domain'],
+                    $params['secure'],
+                    $params['httponly']
                 );
             }
             session_destroy();
@@ -481,13 +521,13 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
         case 'get_all_medicines':
             requireAuth();
             // Capture the search query from the URL if it exists
-            $search = $_GET['search'] ?? ''; 
+            $search = $_GET['search'] ?? '';
             respond(true, getAllMedicines($search));
             break;
 
         case 'get_medicine':
             requireAuth();
-            $id = (int)($_GET['id'] ?? 0);
+            $id = (int) ($_GET['id'] ?? 0);
             $result = getMedicineById($id);
             $result ? respond(true, $result) : respond(false, error: 'Not found.');
             break;
@@ -500,20 +540,20 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 
         case 'update_medicine':
             requireRole(['pharmacy']);
-            $id = (int)($_POST['id'] ?? 0);
+            $id = (int) ($_POST['id'] ?? 0);
             updateMedicine($id, $_POST) ? respond(true) : respond(false, error: 'Update failed.');
             break;
 
         case 'adjust_stock':
             requireRole(['pharmacy']);
-            $id    = (int)($_POST['id']    ?? 0);
-            $delta = (int)($_POST['delta'] ?? 0);
+            $id = (int) ($_POST['id'] ?? 0);
+            $delta = (int) ($_POST['delta'] ?? 0);
             adjustStock($id, $delta) ? respond(true) : respond(false, error: 'Stock update failed.');
             break;
 
         case 'delete_medicine':
             requireRole(['pharmacy']);
-            $id = (int)($_POST['id'] ?? 0);
+            $id = (int) ($_POST['id'] ?? 0);
             deleteMedicine($id) ? respond(true) : respond(false, error: 'Delete failed.');
             break;
 
@@ -524,7 +564,7 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 
         case 'get_low_stock':
             requireAuth();
-            $threshold = (int)($_GET['threshold'] ?? 10);
+            $threshold = (int) ($_GET['threshold'] ?? 10);
             respond(true, getLowStockMedicines($threshold));
             break;
 
@@ -533,21 +573,21 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
             requireRole(['pharmacy']);
             respond(true, getAllUploads(
                 $_GET['file_type'] ?? '',
-                (int)($_GET['limit']  ?? 50),
-                (int)($_GET['offset'] ?? 0)
+                (int) ($_GET['limit'] ?? 50),
+                (int) ($_GET['offset'] ?? 0)
             ));
             break;
 
         case 'get_upload':
             requireRole(['pharmacy']);
-            $id     = (int)($_GET['id'] ?? 0);
+            $id = (int) ($_GET['id'] ?? 0);
             $result = getUploadById($id);
             $result ? respond(true, $result) : respond(false, error: 'Not found.');
             break;
 
         case 'delete_upload':
             requireRole(['pharmacy']);
-            $id = (int)($_POST['id'] ?? 0);
+            $id = (int) ($_POST['id'] ?? 0);
             deleteUpload($id) ? respond(true) : respond(false, error: 'Delete failed.');
             break;
 

@@ -22,6 +22,7 @@
             <a href="#account" class="nav-link active" data-target="authSection">Account</a>
             <a href="#search" class="nav-link" data-target="searchSection">Search</a>
             <a href="#inventory" class="nav-link" data-target="inventorySection">Inventory</a>
+            <a href="#about" class="nav-link" data-target="aboutSection">About</a>
         </nav>
 
         <button class="hamburger-menu" id="hamburgerBtn">
@@ -40,5 +41,6 @@
         <a href="#account" class="nav-link active" data-target="authSection">Account</a>
         <a href="#search" class="nav-link" data-target="searchSection">Search</a>
         <a href="#inventory" class="nav-link" data-target="inventorySection">Inventory</a>
+        <a href="#about" class="nav-link" data-target="aboutSection">About</a>
     </nav>
 </header>

@@ -182,6 +182,64 @@
             </div>
         </div>
     </section>
+    
+        <!-- ================= ABOUT SECTION ================= -->
+        <section id="aboutSection" class="spa-section hidden">
+            <div class="section-intro">
+                <h2>About Dawaya</h2>
+                <p>Learn more about our clinical sanctuary and mission.</p>
+            </div>
+
+            <div class="about-content">
+                <div class="about-card main-mission">
+                    <h3>Our Mission</h3>
+                    <p>Dawaya is designed as a <strong>Clinical Sanctuary</strong> for healthcare providers and customers alike. Our mission is to bridge the gap between clinical data and practical medicine management through a seamless, modern interface.</p>
+                </div>
+
+                <div class="about-features-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        <h4>Smart Drug Index</h4>
+                        <p>Leveraging the <strong>openFDA API</strong>, we provide real-time clinical data, including generic names, ATC codes, and safety warnings for thousands of medications.</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        </div>
+                        <h4>Inventory Management</h4>
+                        <p>Pharmacies can manage their stock levels, pricing, and medical imagery with ease, ensuring patients always find what they need.</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4.5c1.62-1.62 5-2.5 5-2.5"></path><path d="M12 15v5s3.03-.55 4.5-2c1.62-1.62 2.5-5 2.5-5"></path></svg>
+                        </div>
+                        <h4>Modern SPA Architecture</h4>
+                        <p>Built with <strong>Vanilla JavaScript</strong> and <strong>PHP</strong>, Dawaya offers a lightning-fast Single Page Application experience without the bloat of heavy frameworks.</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        </div>
+                        <h4>Secure & Reliable</h4>
+                        <p>Your data is protected with secure session management and database best practices, hosted on high-performance clinical-ready servers.</p>
+                    </div>
+                </div>
+
+                <div class="about-card tech-stack">
+                    <h3>The Technology Behind Dawaya</h3>
+                    <div class="tech-tags">
+                        <span class="tech-tag">PHP 8.2</span>
+                        <span class="tech-tag">MySQL</span>
+                        <span class="tech-tag">ES6 Modules</span>
+                        <span class="tech-tag">Vanilla CSS</span>
+                        <span class="tech-tag">openFDA API</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </section>
     </main>
 
     <!-- Footer -->    

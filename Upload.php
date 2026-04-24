@@ -1,19 +1,11 @@
 <?php
 // Upload.php
 header('Content-Type: application/json');
-$host = '127.0.0.1';
-$db   = 'dawayadb';
-$user = 'root';
-$pass = '';
+require_once 'DB_Ops.php';
 
 try {
-    $dsn = "mysql:host=$host;dbname=$db;charset=utf8mb4";
-    $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => false,
-    ]);
-} catch (PDOException $e) {
+    $pdo = getConnection();
+} catch (Exception $e) {
     echo json_encode(['status' => 'error', 'message' => 'Database connection failed']);
     exit;
 }
@@ -24,29 +16,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$fileKey || $_FILES[$fileKey]['error'] !== UPLOAD_ERR_OK) {
         $errorMsg = 'Upload failed or no file selected.';
         if ($fileKey && isset($_FILES[$fileKey])) {
-             switch($_FILES[$fileKey]['error']) {
-                 case UPLOAD_ERR_INI_SIZE:
-                 case UPLOAD_ERR_FORM_SIZE:
-                     $errorMsg = 'File exceeds max size limit.';
-                     break;
-                 case UPLOAD_ERR_PARTIAL:
-                     $errorMsg = 'File was only partially uploaded.';
-                     break;
-                 case UPLOAD_ERR_NO_FILE:
-                     $errorMsg = 'No file was uploaded.';
-                     break;
-             }
+            switch ($_FILES[$fileKey]['error']) {
+                case UPLOAD_ERR_INI_SIZE:
+                case UPLOAD_ERR_FORM_SIZE:
+                    $errorMsg = 'File exceeds max size limit.';
+                    break;
+                case UPLOAD_ERR_PARTIAL:
+                    $errorMsg = 'File was only partially uploaded.';
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    $errorMsg = 'No file was uploaded.';
+                    break;
+            }
         }
         echo json_encode(['status' => 'error', 'message' => $errorMsg]);
         exit;
     }
 
     $file = $_FILES[$fileKey];
-    
+
     // Validate File Type
     $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
     $allowedExts = ['pdf', 'jpg', 'jpeg', 'png'];
-    
+
     $fileMime = mime_content_type($file['tmp_name']);
     $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
@@ -80,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("INSERT INTO uploads (file_name, file_path) VALUES (?, ?)");
         if ($stmt->execute([$file['name'], $relativePath])) {
             echo json_encode([
-                'status' => 'success', 
+                'status' => 'success',
                 'message' => 'File uploaded successfully!',
                 'data' => [
                     'file_name' => htmlspecialchars($file['name']),
@@ -97,5 +89,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
 } else {
-     echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
 }
